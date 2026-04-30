@@ -21,7 +21,7 @@ def setup_population():
     ])
 
 def test_inversion(setup_population):
-    mutator = Mutate(population=setup_population, mutation_pro=1.0)
+    mutator = Mutate(mutation_pro=1.0)
     
     with patch('random.sample', return_value=[2, 5]):
         res = mutator.inversion(setup_population.copy())
@@ -32,7 +32,7 @@ def test_inversion(setup_population):
         assert len(np.unique(res[0])) == 8
 
 def test_insertion(setup_population):
-    mutator = Mutate(population=setup_population, mutation_pro=1.0)
+    mutator = Mutate(mutation_pro=1.0)
     
     with patch('random.sample', return_value=[2, 5]):
         res = mutator.insertion(setup_population.copy())
@@ -45,7 +45,7 @@ def test_insertion(setup_population):
         assert len(np.unique(res[0])) == 8 
 
 def test_reciprocal(setup_population):
-    mutator = Mutate(population=setup_population, mutation_pro=1.0)
+    mutator = Mutate(mutation_pro=1.0)
     
     with patch('random.sample', return_value=[1, 5]):
         res = mutator.reciprocal(setup_population.copy())
@@ -55,7 +55,7 @@ def test_reciprocal(setup_population):
         assert len(np.unique(res[0])) == 8
 
 def test_pair_wise_exchange(setup_population):
-    mutator = Mutate(population=setup_population, mutation_pro=1.0)
+    mutator = Mutate(mutation_pro=1.0)
     
     with patch('random.sample', return_value=[3]):
         res = mutator.pair_wise_exchange(setup_population.copy())
@@ -65,7 +65,7 @@ def test_pair_wise_exchange(setup_population):
         assert len(np.unique(res[0])) == 8
 
 def test_two_opt(setup_population):
-    mutator = Mutate(population=setup_population, mutation_pro=1.0)
+    mutator = Mutate(mutation_pro=1.0)
     
     with patch('random.sample', return_value=[2]):
         res = mutator.two_opt(setup_population.copy())
@@ -75,7 +75,7 @@ def test_two_opt(setup_population):
         assert len(np.unique(res[0])) == 8
 
 def test_three_opt(setup_population):
-    mutator = Mutate(population=setup_population, mutation_pro=1.0)
+    mutator = Mutate(mutation_pro=1.0)
     
     with patch('random.sample', return_value=[1]):
         res = mutator.three_opt(setup_population.copy())
@@ -85,6 +85,6 @@ def test_three_opt(setup_population):
         assert len(np.unique(res[0])) == 8
 
 def test_mutation_zero_probability(setup_population):
-    mutator = Mutate(population=setup_population, mutation_pro=0.0)
+    mutator = Mutate(mutation_pro=0.0)
     res = mutator.inversion(setup_population.copy())
     np.testing.assert_array_equal(res, setup_population)

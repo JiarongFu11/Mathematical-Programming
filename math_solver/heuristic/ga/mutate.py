@@ -14,8 +14,7 @@ def select_subject_loop(func):
     
 
 class Mutate():
-    def __init__(self, population:np.ndarray, mutation_pro:float):
-        self.population = population
+    def __init__(self, mutation_pro:float):
         self.mutation_pro = mutation_pro
     
     @select_subject_loop
@@ -68,4 +67,11 @@ class Mutate():
             temp = subject[position]
             subject[position] = subject[position + 3]
             subject[position + 3] = temp
+        return subject
+    
+    @select_subject_loop
+    def mutate_interval(self, subject:np.ndarray, low:float=-0.2, high:float=0.2, ):
+        if random.random() < self.mutation_pro:
+            mutation_array = np.random.unifrom(1 + low, 1 + high, size=len(subject))
+            subject = subject @ mutation_array.T
         return subject
