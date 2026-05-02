@@ -124,6 +124,20 @@ class TestBLS2(BacktrackLineSearch):
         self.vars_lst = np.array([2.0])
         obj = self.cal_objective(self.vars_lst)
         
+class TestBLS3(BacktrackLineSearch):
+    def __init__(self):
+        super().__init__(num_vars=1, mode='Minimize')
+        
+    def check_constraints(self, vars_values:np.ndarray) -> None:
+        return True
+    
+    def cal_objective(self, vars_values:np.ndarray) -> float:
+        return vars_values[0] ** 2 - 6 * vars_values[0] + 5
+    
+    def init_params(self,) -> None:
+        self.vars_lst = np.array([0.1])
+        obj = self.cal_objective(self.vars_lst)
+        
 if __name__ == '__main__':
-    t = TestBLS2()
+    t = TestBLS3()
         

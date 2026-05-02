@@ -218,14 +218,33 @@ class TestIP_2(BranchBound):
         model += 2 * self.x1 + 1 * self.x2 + 1 * self.x3 >= 8, 'Constraint 1'
         model += 1 * self.x1 + 2 * self.x2 + 1 * self.x3 >= 6, 'Constraint 2'
 
+class TestIP_3(BranchBound):
+    def __init__(self, model, ILP_type:str):
+        super().__init__(model, ILP_type)
+
+    def define_int_variables(self) -> List:
+
+        self.x1 = pulp.LpVariable('x1', lowBound=0, upBound=1, cat='Continuous')
+        self.x2 = pulp.LpVariable('x2', lowBound=0, upBound=1, cat='Continuous')
+        self.x3 = pulp.LpVariable('x3', lowBound=0, upBound=1, cat='Continuous')
+        self.x4 = pulp.LpVariable('x4', lowBound=0, upBound=1, cat='Continuous')
+        return [self.x1, self.x2, self.x3, self.x4]
+
+
+    def define_nint_variables(self) -> List:
+        return [] 
+
+    def define_objective(self, model):
+        model += (40 * self.x1 + 50 * self.x2 + 60 * self.x3 + 70 * self.x4), 'Objective'
+
+    def define_constraints(self, model):
+        model += 2 * self.x1 + 3 * self.x2 + 4 * self.x3 + 5 * self.x4 <= 7, 'Constraint 1'
+
 
 
 if __name__ == "__main__":
-    base_model = pulp.LpProblem('LP2', pulp.LpMinimize)
-    solver = TestIP_2(base_model, 'Minimize')
-    
-    base_model = pulp.LpProblem('LP', pulp.LpMaximize)
-    solver = TestIP_1(base_model, 'Maximize')
+    base_model = pulp.LpProblem('LP2', pulp.LpMaximize)
+    solver = TestIP_3(base_model, 'Maximize')
     
     
     

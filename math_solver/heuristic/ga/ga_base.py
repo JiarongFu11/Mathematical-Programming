@@ -7,37 +7,33 @@ from typing import List, Tuple
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir, os.pardir, os.pardir))
 if project_root not in sys.path:
     sys.path.insert(0, project_root)
+    
 from math_solver.heuristic.ga.crossover import Crossover
 from math_solver.heuristic.ga.generate_population import GeneratePopulation
-from math_solver.heuristic.ga.ga_selction import Selection
+from math_solver.heuristic.ga.ga_selection import Selection
 from math_solver.heuristic.ga.mutate import Mutate
 
 class GeneticAlgo():
     def __init__(self, 
                  population_size:int, 
-                 crossover_type:str, 
                  crossover_pro:float,
-                 mutate_type:str,
                  mutate_pro:float,
-                 mutation_range:float,
                  elitism:bool,
                  obj_type:str,
                  iteration_num:int = 3,
+                 seletion_num:int = 100
                  ):
         
         self.population_size = population_size
-        self.crossover_type = crossover_type
         self.crossover_pro = crossover_pro
-        self.mutate_type = mutate_type
         self.mutate_pro = mutate_pro
-        self.mutation_range = mutation_range
         self.elitism = elitism
         self.iteration_num = iteration_num
         self.obj_type = obj_type
         self.optim_operator = np.min if self.obj_type == 'Minimize' else np.max
         
-        self.population_generator = GeneratePopulation()
-        self.selector = Selection()
+        self.population_generator = GeneratePopulation(population_size)
+        self.selector = Selection(elitism, seletion_num, obj_type)
         self.crossover_engine = Crossover(crossover_pro)
         self.mutate_engine = Mutate(mutate_pro)
         
@@ -87,9 +83,11 @@ class GeneticAlgo():
             feasibility_array = self.check_constraints(population)
             population = self.remove_infeasible_chromosome(population, feasibility_array)
             obj_values_array = self.cal_obj_value(population)
+            print(self.optim_operator(obj_values_array))
             best_obj_lst.append(self.optim_operator(obj_values_array))
             
             is_terminate = self.check_termination(best_obj_lst)
+            print(iter_i)
             
             iter_i += 1
         
@@ -98,22 +96,16 @@ class GeneticAlgo():
 class Test1(GeneticAlgo):
     def __init__(self, 
                  population_size:int, 
-                 crossover_type:str, 
                  crossover_pro:float,
-                 mutate_type:str,
                  mutate_pro:float,
-                 mutation_range:float,
                  elitism:bool,
                  obj_type:str,
                  iteration_num:int = 2,
                  ):
         super().__init__(
             population_size, 
-            crossover_type, 
             crossover_pro,
-            mutate_type,
             mutate_pro,
-            mutation_range,
             elitism,
             obj_type,
             iteration_num,
@@ -121,7 +113,7 @@ class Test1(GeneticAlgo):
         
     
     def generate_population(self, population_size:int) -> np.ndarray:
-        return self.population_generator.generate_number_type(population_size, 0, 20)
+        return self.population_generator.generate_number_type(3, 0, 0.5)
     
     def crossover(self, population:np.ndarray) -> np.ndarray:
         return self.crossover_engine.single_point_crossover(population)
@@ -132,7 +124,7 @@ class Test1(GeneticAlgo):
     def check_constraints(self, population:np.ndarray) -> np.ndarray[bool]:
         res_1 = population @ np.array([8, 6, 2]).T
         res_2 = population @ np.array([1, 1, 2]).T
-        return res_1 <= 13 & res_2 <= 4
+        return (res_1 <= 13) & (res_2 <= 4)
     
     def cal_obj_value(self, population:np.ndarray) -> np.ndarray[bool]:
         obj_array = population @ np.array([8, 6, 1]).T
@@ -141,12 +133,15 @@ class Test1(GeneticAlgo):
     def select_chromosomes(self, population:np.ndarray, obj_values_array:np.ndarray, elitism:bool) -> np.ndarray:
         return self.selector.roulette_wheel_selection(population, obj_values_array)
     
-
-
-    
-    
 if __name__ == '__main__':
-    Test1().iteration_process()
+    Test1(
+        population_size=10000,
+        crossover_pro=0.9,
+        mutate_pro=0.9,
+        elitism=True,
+        obj_type='Maximize',
+        iteration_num = 2,
+        ).iteration_process()
         
         
         

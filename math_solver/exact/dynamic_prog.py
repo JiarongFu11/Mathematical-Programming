@@ -51,3 +51,6 @@ class ResourceAllocationDP():
             n_stage -= 1
         
         return path
+
+if __name__ == '__main__':
+    pass

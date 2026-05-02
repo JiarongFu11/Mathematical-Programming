@@ -72,6 +72,6 @@ class Mutate():
     @select_subject_loop
     def mutate_interval(self, subject:np.ndarray, low:float=-0.2, high:float=0.2, ):
         if random.random() < self.mutation_pro:
-            mutation_array = np.random.unifrom(1 + low, 1 + high, size=len(subject))
+            mutation_array = np.random.uniform(1 + low, 1 + high, size=len(subject))
             subject = subject @ mutation_array.T
         return subject
