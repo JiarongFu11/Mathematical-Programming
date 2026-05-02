@@ -55,7 +55,7 @@ class SimulatedAnnealing():
     def termination(self, subject:np.ndarray) -> bool:
         return False
     
-def iterative(self):
+    def iterative(self):
         population = self.generate_population(self.population_num)
         subject = self.selection(population)
         
