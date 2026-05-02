@@ -55,13 +55,14 @@ class SimulatedAnnealing():
     def termination(self, subject:np.ndarray) -> bool:
         return False
     
-    def iterative(self,):
+def iterative(self):
         population = self.generate_population(self.population_num)
         subject = self.selection(population)
+        
+        ori_obj = self.cal_obj(subject) 
         iter_i = 0
         
         while iter_i <= self.iteration_num:
-            ori_obj = self.cal_obj(subject)
             new_subject = self.perturb(subject)
             iter_i += 1
             
@@ -71,8 +72,11 @@ class SimulatedAnnealing():
             new_obj = self.cal_obj(new_subject)
             self.temperature *= self.cooling_rate
             is_accept = self.decide_acceptance(ori_obj, new_obj, self.temperature)
+            
             if is_accept:
                 subject = new_subject
+                ori_obj = new_obj 
+                
             if self.termination(subject):
                 break
             
