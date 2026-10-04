@@ -46,39 +46,3 @@ class Newton():
             if np.linalg.norm(self.F(x)) < self.eps:
                 return x, k, np.array(path)
         raise RuntimeError(f'未收敛: x={x}')
-            
-
-
-def f(x):
-    return (x[0] - 2) ** 4 + (x[0] - 2 * x[1]) ** 2
-
-def grad_f(x):
-    return np.array([4 * (x[0] - 2) ** 3 + 2 * (x[0] - 2 * x[1]),
-                     -4 * (x[0] - 2 * x[1])])
-
-def hess_f(x):
-    return np.array([[12 * (x[0] - 2) ** 2 + 2, -4.0],
-                     [-4.0, 8.0]])
-
-
-if __name__ == '__main__':
-    x_star, n_iter, path = Newton(grad_f, hess_f, f, eps=1e-6).run_with_line_search((0.0, 3.0))
-    print(f'\nconverged after {n_iter} iterations, x* = {x_star}, f = {f(x_star):.3e}')
-
-    fig, axes = plt.subplots(1, 2, figsize=(13, 5.5))
-    views = [((-0.5, 3.0), (0.0, 3.3), 'Full path'),
-             ((1.95, 2.02), (0.975, 1.01), 'Zoom near the minimum')]
-    for ax, (xl, yl, title) in zip(axes, views):
-        X1, X2 = np.meshgrid(np.linspace(*xl, 400), np.linspace(*yl, 400))
-        ax.contour(X1, X2, (X1 - 2) ** 4 + (X1 - 2 * X2) ** 2,
-                   levels=np.logspace(-9, 2, 40), cmap='viridis', linewidths=0.6)
-        ax.plot(path[:, 0], path[:, 1], 'r.-', lw=1, ms=5, label='Newton path')
-        ax.plot(*path[0], 'bs', ms=7, label='start (0, 3)')
-        ax.plot(2, 1, 'k*', ms=12, label='optimum (2, 1)')
-        ax.set_xlim(xl); ax.set_ylim(yl)
-        ax.set_xlabel('$x_1$'); ax.set_ylabel('$x_2$')
-        ax.set_title(title); ax.legend(loc='lower right')
-    fig.suptitle(f"Gloden Line Search ($\\lambda_k=1$), {n_iter} iterations")
-    fig.tight_layout()
-    fig.savefig('newton_path.png', dpi=150)
-    plt.show()
