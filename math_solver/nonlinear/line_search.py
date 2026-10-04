@@ -1,143 +1,112 @@
-import numpy as np
-from abc import ABC
+import math
+from abc import ABC, abstractmethod
 
-class BacktrackLineSearch(ABC):
-    def __init__(self, num_vars:int, mode:str, delta:float=0.001, u:float=0.1, num_iteration:int=50):
-        if mode not in ['Maximize', 'Minimize']:
-            raise ValueError('mode can only be Maximize or Minimize')
-        self.mode = mode
-        self.direction = 1 if self.mode == 'Maximize' else -1
-        self.num_vars = num_vars
-        self.delta = delta
-        self.u = u
-        self.num_iteration = num_iteration
-        
-        self.init_params()
-        self.iter_process()
-    
-    def check_constraints(self, vars_values:np.ndarray) -> bool:
-        return True
-    
-    def cal_objective(self, var_values:np.ndarray) -> float:
-        raise  NotImplementedError
-    
-    def cal_grad(self, ori_obj:float) -> np.ndarray:
-        grads = np.zeros(self.num_vars)
-        for i in range(len(self.vars_lst)):
-            var_values = self.vars_lst.copy()
-            var_values[i] = var_values[i] + self.delta
-            grads[i] = (self.cal_objective(var_values) - ori_obj) / self.delta            
-            
-        print(f'compute the gradients: {grads}')
-        
-        return grads
-    
-    def update_params(self, ori_obj:float, grad:np.ndarray) -> None:
-        lambda_ = 1
-        search_dir = grad * self.direction
-        print(f'direction for {self.mode} is {search_dir}')
-        while True:
-            if lambda_ < 1e-8:
-                print("Warning: step size is too small so stop search lambda")
-                break
-            
-            print(f'test lambda_ = {lambda_}')
-            
-            new_vars = self.vars_lst + lambda_ * search_dir
-            new_obj = self.cal_objective(new_vars)
-            print(f'trial point {new_vars} and the objective value is {new_obj}')
-            
-            expected_obj = ori_obj + self.u * lambda_ * grad @ search_dir.T
-            print(f'the expected objective is {expected_obj}')
-            
-            if not self.check_constraints(new_vars):
-                lambda_ /= 2
-                continue
-            else:
-                print('constraints satisfy')
-            
-            if self.mode == 'Maximize' and new_obj >= expected_obj:
-                self.vars_lst = new_vars
-                print(f'lambda = {lambda_} satisfied')
-                print(f'objective value = {new_obj} is larger than {expected_obj}')
-                print(f'the parameters is updated to {self.vars_lst}')
-                print('\n')
-                break
-            elif self.mode == 'Minimize' and new_obj <= expected_obj:
-                self.vars_lst = new_vars
-                print(f'objective value = {new_obj} is less than {expected_obj}')
-                print(f'the parameters is updated to {self.vars_lst}')
-                print('\n')
-                break
-            else:
-                print(f'reject lambda {lambda_}')
-                print('\n')
-                lambda_ /= 2
-    
-    def init_params(self,) -> None:
-        is_feasibility = False
-        while not is_feasibility:
-            self.vars_lst = np.random.rand(self.num_vars)
-            is_feasibility = self.check_constraints(self.vars_lst)
-            print(f'satisfy feasibility : {self.vars_lst}')
-        
-        obj = self.cal_objective(self.vars_lst)
-        print(f'initial objective {obj}')
-    
-    def iter_process(self,) -> None:
-        is_stationary_point = False
-        iteration_ = 0
-        while (not is_stationary_point) and (iteration_ <= self.num_iteration):
-            ori_obj = self.cal_objective(self.vars_lst)
-            grads = self.cal_grad(ori_obj)
-            if grads @ grads.T < 1e-5:
-                print('find the stationary point: iteration process end')
-                break
-            self.update_params(ori_obj, grads)
-            iteration_ += 1
 
-class TestBLS1(BacktrackLineSearch):
-    def __init__(self):
-        super().__init__(num_vars=1, mode='Maximize')
-        
-    def check_constraints(self, vars_values:np.ndarray) -> None:
-        return True
-    
-    def cal_objective(self, vars_values:np.ndarray) -> float:
-        return -vars_values[0] ** 2 + 10 * vars_values[0]
-    
-    def init_params(self,) -> None:
-        self.vars_lst = np.array([3.0])
-        obj = self.cal_objective(self.vars_lst)
+class LineSearchABC(ABC):
 
-class TestBLS2(BacktrackLineSearch):
-    def __init__(self):
-        super().__init__(num_vars=1, mode='Minimize')
-        
-    def check_constraints(self, vars_values:np.ndarray) -> None:
-        return True
-    
-    def cal_objective(self, vars_values:np.ndarray) -> float:
-        return vars_values[0] ** 2
-    
-    def init_params(self,) -> None:
-        self.vars_lst = np.array([2.0])
-        obj = self.cal_objective(self.vars_lst)
-        
-class TestBLS3(BacktrackLineSearch):
-    def __init__(self):
-        super().__init__(num_vars=1, mode='Minimize')
-        
-    def check_constraints(self, vars_values:np.ndarray) -> None:
-        return True
-    
-    def cal_objective(self, vars_values:np.ndarray) -> float:
-        return vars_values[0] ** 2 - 6 * vars_values[0] + 5
-    
-    def init_params(self,) -> None:
-        self.vars_lst = np.array([0.1])
-        obj = self.cal_objective(self.vars_lst)
-        
+    def __init__(self, func, eps: float = 0.002):
+        self.func = func
+        self.eps = eps
+
+    @abstractmethod
+    def calculate_lambda_and_u(self, left_point, right_point):
+        ...
+
+    @abstractmethod
+    def determine_iteration(self, left_point, right_point):
+        ...
+
+    def update_interval(self, left_point: float, right_point: float):
+        l, u = self.calculate_lambda_and_u(left_point, right_point)
+        if self.func(l) > self.func(u):
+            left_point = l
+        else:
+            right_point = u
+        return left_point, right_point
+
+    def run(self, left_point: float, right_point: float):
+        print(f'===== {type(self).__name__} =====')
+        n = self.determine_iteration(left_point, right_point)
+        for i in range(n):
+            print(f'itr {i + 1}: a = {left_point:.6f}, b = {right_point:.6f}')
+            left_point, right_point = self.update_interval(left_point, right_point)
+        lambda_star = (left_point + right_point) / 2
+        print(f'final: a = {left_point:.8f}, b = {right_point:.8f}, '
+              f'length = {right_point - left_point:.4e}')
+        print(f'the number of total iterations: {n}')
+        print(f'lambda* = {lambda_star:.8f}, g(lambda*) = {self.func(lambda_star):.8f}\n')
+        return lambda_star, (left_point, right_point)
+
+
+class DichotomousLineSearch(LineSearchABC):
+
+    def __init__(self, func, eps: float = 0.002, delta: float = None):
+        super().__init__(func, eps)
+        self.delta = eps / 10 if delta is None else delta
+
+    def calculate_lambda_and_u(self, left_point, right_point):
+        mid = (left_point + right_point) / 2
+        return mid - self.delta, mid + self.delta
+
+    def determine_iteration(self, left_point, right_point):
+        L0 = right_point - left_point
+        if L0 <= self.eps:
+            return 0
+        return math.ceil(math.log2((L0 - 2 * self.delta) / (self.eps - 2 * self.delta)))
+
+
+class GoldenLineSearch(LineSearchABC):
+
+    RATIO = (math.sqrt(5) - 1) / 2
+
+    def determine_iteration(self, left_point, right_point):
+        L0 = right_point - left_point
+        if L0 <= self.eps:
+            return 0
+        return math.ceil(math.log(self.eps / L0) / math.log(self.RATIO))
+
+    def calculate_lambda_and_u(self, left_point, right_point):
+        length = right_point - left_point
+        l = left_point + (1 - self.RATIO) * length
+        u = left_point + self.RATIO * length
+        return l, u
+
+
+class FibonacciLineSearch(LineSearchABC):
+
+    def __init__(self, func, eps: float = 0.002, delta: float = None):
+        super().__init__(func, eps)
+        self.delta = eps / 10 if delta is None else delta
+        self.FN_1 = self.FN_2 = self.FN_3 = 0
+
+    def calculate_lambda_and_u(self, left_point, right_point):
+        length = right_point - left_point
+        l = left_point + self.FN_1 / self.FN_3 * length
+        u = left_point + self.FN_2 / self.FN_3 * length
+        if self.FN_3 == 2:
+            u = l + self.delta
+
+        self.FN_1, self.FN_2, self.FN_3 = self.FN_2 - self.FN_1, self.FN_1, self.FN_2
+        return l, u
+
+    def determine_iteration(self, left_point, right_point):
+        L0 = right_point - left_point
+        if L0 <= self.eps:
+            return 0
+        target = L0 / self.eps
+        fib = [1, 1, 2]
+        while fib[-1] < target:
+            fib.append(fib[-1] + fib[-2])
+        self.FN_1, self.FN_2, self.FN_3 = fib[-3], fib[-2], fib[-1]
+        return len(fib) - 2
+
+def ProblemB():
+    f = lambda lam: (0 + 4.4 * lam - 2) ** 4 + ((0 + 4 * lam) + 2 * (3 - 2.4 * lam)) ** 2
+    GoldenLineSearch(f, eps=EPS).run(0, 100)
+
+
 if __name__ == '__main__':
-    t = TestBLS3()
-        
+
+    EPS = 1e-6
+    f = lambda lam: (0 + 4.4 * lam - 2) ** 4 + ((0 + 4.4 * lam) - 2 * (3 - 2.4 * lam)) ** 2
+    GoldenLineSearch(f, eps=EPS).run(0, 100)
