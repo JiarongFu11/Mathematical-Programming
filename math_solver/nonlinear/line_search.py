@@ -1,4 +1,5 @@
 import math
+import numpy as np
 from abc import ABC, abstractmethod
 
 
@@ -99,14 +100,3 @@ class FibonacciLineSearch(LineSearchABC):
             fib.append(fib[-1] + fib[-2])
         self.FN_1, self.FN_2, self.FN_3 = fib[-3], fib[-2], fib[-1]
         return len(fib) - 2
-
-def ProblemB():
-    f = lambda lam: (0 + 4.4 * lam - 2) ** 4 + ((0 + 4 * lam) + 2 * (3 - 2.4 * lam)) ** 2
-    GoldenLineSearch(f, eps=EPS).run(0, 100)
-
-
-if __name__ == '__main__':
-
-    EPS = 1e-6
-    f = lambda lam: (0 + 4.4 * lam - 2) ** 4 + ((0 + 4.4 * lam) - 2 * (3 - 2.4 * lam)) ** 2
-    GoldenLineSearch(f, eps=EPS).run(0, 100)
